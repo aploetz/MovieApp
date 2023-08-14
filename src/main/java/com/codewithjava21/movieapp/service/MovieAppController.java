@@ -14,16 +14,35 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MovieAppController {
 	
-	private MovieAppRepository repo;
+	private MovieRepository movieRepo;
+	private MovieByTitleRepository movieTitleRepo;
 	
-	public MovieAppController(MovieAppRepository movieRepo) {
-		this.repo = movieRepo;
+	public MovieAppController(MovieRepository movieRepo, MovieByTitleRepository movieTitleRepo) {
+		this.movieRepo = movieRepo;
 	}
 
 	@GetMapping("/movie/id")
 	public ResponseEntity<Movie> getMovieByMovieId(@PathVariable(value="id") int movieId) {
 		
-		Optional<Movie> returnVal = repo.findById(movieId);
+		Optional<Movie> returnVal = movieRepo.findById(movieId);
+		
+		return ResponseEntity.ok(returnVal.get());
+	}
+	
+	@GetMapping("/movie/title")
+	public ResponseEntity<Movie> getMovieByTitle(@PathVariable(value="title") String movieTitle) {
+		
+		Optional<Movie> returnVal = Optional.ofNullable(new Movie());
+		Optional<MovieByTitle> movieByTitle = movieTitleRepo.findById(movieTitle);
+		
+		if (movieByTitle.isEmpty()) {
+			// try one more time with "The " on the front"
+			movieByTitle = movieTitleRepo.findById("The " + movieTitle);
+		}
+
+		if (movieByTitle.isPresent()) {
+			returnVal = movieRepo.findById(movieByTitle.get().getMovieId());
+		}
 		
 		return ResponseEntity.ok(returnVal.get());
 	}
@@ -34,10 +53,10 @@ public class MovieAppController {
 		List<Movie> returnVal = new ArrayList<>();
 		
 		// get original movie by id
-		Optional<Movie> origMovie = repo.findById(movieId);
+		Optional<Movie> origMovie = movieRepo.findById(movieId);
 		
 		// get list of movies by original movie's vector
-		returnVal = repo.findMoviesByVector(origMovie.get().getVector());
+		returnVal = movieRepo.findMoviesByVector(origMovie.get().getVector());
 		
 		return ResponseEntity.ok(returnVal);
 	}

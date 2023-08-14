@@ -16,7 +16,7 @@ astra:
   api:
     application-token: ${ASTRA_DB_APP_TOKEN}
     database-id: ${ASTRA_DB_ID}
-    database-region: ${ASTRA_DB_REGION}
+    database-region: us-east1
     cross-region-failback: false
   cql:
     enabled: true

@@ -3,32 +3,45 @@ package com.codewithjava21.movieapp.service;
 import java.time.LocalDate;
 import java.util.Map;
 
+import org.springframework.data.cassandra.core.mapping.Column;
+import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.mapping.Table;
+
 import com.datastax.oss.driver.api.core.data.CqlVector;
 
 //import com.datastax.oss.driver.api.core.data.CqlVector;
 
+@Table("movies")
 public class Movie {
-    private int movieId;
-    private String imdbId;
+	
+	//@PrimaryKey("movie_id")
+	@PrimaryKey("id")
+    private Integer movieId;
+	
     private String title;
     private String description;
-    private float runtime;
-    private String tagline;
-    private String originalLanguage;
+    private float runtime;    
     private String image;
     private Map<Integer,String> genres;
     private String website;
-    private LocalDate releaseDate;
     private Long budget;
     private Long revenue;
-    private int year;
+    private Integer year;
+    
+	@Column("imdb_id")
+    private String imdbId;
+	@Column("original_language")
+    private String originalLanguage;
+	@Column("release_date")
+    private LocalDate releaseDate;
+	@Column("movie_vector")
     private CqlVector<Float> vector;
     
-	public int getMovieId() {
+	public Integer getMovieId() {
 		return movieId;
 	}
 	
-	public void setMovieId(int movieId) {
+	public void setMovieId(Integer movieId) {
 		this.movieId = movieId;
 	}
 	
@@ -64,14 +77,6 @@ public class Movie {
 		this.runtime = runtime;
 	}
 	
-	public String getTagline() {
-		return tagline;
-	}
-	
-	public void setTagline(String tagline) {
-		this.tagline = tagline;
-	}
-	
 	public String getOriginalLanguage() {
 		return originalLanguage;
 	}
@@ -104,11 +109,11 @@ public class Movie {
 		this.website = website;
 	}
 	
-	public int getYear() {
+	public Integer getYear() {
 		return year;
 	}
 	
-	public void setYear(int year) {
+	public void setYear(Integer year) {
 		this.year = year;
 	}
 	
