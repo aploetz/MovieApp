@@ -1,4 +1,5 @@
-/target/
+target/
+frontend/
 .classpath
 .project
 .settings
