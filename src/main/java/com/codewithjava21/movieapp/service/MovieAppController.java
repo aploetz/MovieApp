@@ -33,11 +33,11 @@ public class MovieAppController {
 	public ResponseEntity<Movie> getMovieByTitle(@PathVariable(value="title") String movieTitle) {
 		
 		Optional<Movie> returnVal = Optional.ofNullable(new Movie());
-		Optional<MovieByTitle> movieByTitle = movieTitleRepo.findById(movieTitle);
+		Optional<MovieByTitle> movieByTitle = movieTitleRepo.findById(movieTitle.toLowerCase());
 		
 		if (movieByTitle.isEmpty()) {
-			// try one more time with "The " on the front"
-			movieByTitle = movieTitleRepo.findById("The " + movieTitle);
+			// try one more time with "the " on the front"
+			movieByTitle = movieTitleRepo.findById("the " + movieTitle.toLowerCase());
 		}
 
 		if (movieByTitle.isPresent()) {
@@ -57,6 +57,8 @@ public class MovieAppController {
 		
 		// get list of movies by original movie's vector
 		returnVal = movieRepo.findMoviesByVector(origMovie.get().getVector());
+		// The first item in the list will be the original movie, so REMOVE
+		returnVal.remove(0);
 		
 		return ResponseEntity.ok(returnVal);
 	}
