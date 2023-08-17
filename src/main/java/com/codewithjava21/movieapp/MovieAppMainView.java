@@ -143,10 +143,6 @@ public class MovieAppMainView extends VerticalLayout {
 		queryBy.setItems("ID", "Title");
 		queryBy.setValue("ID");
 		
-		queryBy.addValueChangeListener(click -> {
-			refreshData();
-		});
-		
 		layout.add(queryBy);
 		
 		return layout;		
