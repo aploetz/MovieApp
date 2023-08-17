@@ -15,7 +15,7 @@ import com.datastax.oss.driver.api.core.data.CqlVector;
 public class Movie {
 	
 	//@PrimaryKey("movie_id")
-	@PrimaryKey("id")
+	@PrimaryKey("movie_id")
     private Integer movieId;
 	
     private String title;

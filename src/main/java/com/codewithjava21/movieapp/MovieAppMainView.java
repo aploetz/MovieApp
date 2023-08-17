@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import com.codewithjava21.movieapp.service.Movie;
 import com.codewithjava21.movieapp.service.MovieAppController;
@@ -71,15 +73,16 @@ public class MovieAppMainView extends VerticalLayout {
 	
 	private Paragraph description = new Paragraph();
 	private Paragraph title = new Paragraph();
-	private Paragraph year = new Paragraph();
 	private Paragraph recommendation1 = new Paragraph();
 	private Paragraph recommendation2 = new Paragraph();
 	private Paragraph recommendation3 = new Paragraph();
 	private Paragraph recommendation4 = new Paragraph();
 	private Paragraph recommendation5 = new Paragraph();
+	private Paragraph year = new Paragraph();
 	
 	private Locale enUS = Locale.US;
 	private MemoryBuffer buffer;
+	private Pattern numericPattern = Pattern.compile("-?\\d+(\\.\\d+)?");
 	private Upload upload;
 	private String noImageFile = "images/noImage.png";
 	private StreamResource noImgFileStream;
@@ -89,16 +92,15 @@ public class MovieAppMainView extends VerticalLayout {
 	
 	public MovieAppMainView(MovieRepository mRepo, MovieByTitleRepository mtRepo) {
 		controller = new MovieAppController(mRepo, mtRepo);
-				
+		
 		add(buildQueryBar());
 		add(buildTitle());
-		add(year);
-		add(buildGenreData());
 
-		add(buildImageData());
 		add(buildImageUpdateControls());
+		add(buildImageData(), description);
+		add(buildGenreData());
 		
-		add(description);
+		//add(description);
 		add(buildMovieMetaData());
 		add(buildFinancialData());
 		add(buildRatingData());
@@ -110,7 +112,7 @@ public class MovieAppMainView extends VerticalLayout {
 	private Component buildQueryBar() {
 		HorizontalLayout layout = new HorizontalLayout();
 		
-		Button queryButton = new Button("Query");
+		queryButton = new Button("Query");
 		queryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		Icon search = new Icon(VaadinIcon.SEARCH);
 		queryField.setPrefixComponent(search);
@@ -131,7 +133,7 @@ public class MovieAppMainView extends VerticalLayout {
 				.set("font-weight", "bold")
 				.set("font-size", "x-large");
 		
-		layout.add(title);
+		layout.add(title, year);
 		
 		return layout;
 	}
@@ -198,10 +200,17 @@ public class MovieAppMainView extends VerticalLayout {
 			// generate filename
 			int movieID = Integer.parseInt(movieId.getValue());
 			StringBuilder filename = new StringBuilder("images/");
+			String mimeType = event.getMIMEType();
 			
 			filename.append("movie_");
 			filename.append(movieId.getValue());
-			filename.append(".png");
+						
+			if (mimeType.equals("image/jpg") || mimeType.equals("image/jpeg")) {
+				filename.append(".jpg");
+			} else {
+				// we only accept jpegs or pngs, so it must be a png
+				filename.append(".png");
+			}
 			
 			InputStream inStream = buffer.getInputStream();
 			try {
@@ -239,8 +248,17 @@ public class MovieAppMainView extends VerticalLayout {
 		if (movieID >= 0) {
 			filename.append("movie_");
 			filename.append(movieID);
-			filename.append(".png");
-
+			filename.append(".jpg");
+			// try jpg first
+			
+			if (!new File(filename.toString()).exists()) {
+				// try png next
+				filename = new StringBuilder("images/");
+				filename.append("movie_");
+				filename.append(movieID);
+				filename.append(".png");
+			}
+			
 			try {
 				FileInputStream imgFileStream = new FileInputStream(new File(filename.toString()));
 				StreamResource src = new StreamResource("image",() -> {
@@ -289,6 +307,7 @@ public class MovieAppMainView extends VerticalLayout {
 		votes.setReadOnly(true);
 		
 		Icon star = new Icon(VaadinIcon.STAR);
+		star.setColor("gold");
 		voteRating.setPrefixComponent(star);
 		
 		layout.add(voteRating, votes);
@@ -385,16 +404,25 @@ public class MovieAppMainView extends VerticalLayout {
 	
 	private void refreshData() {
 	
-		try {
-			Movie movie = new Movie();
-			
-			if (queryBy.getValue().equals("ID")) {
-				movie = controller.getMovieByMovieId(Integer.parseInt(queryField.getValue())).getBody();
+		Optional<Movie> optionalMovie;
+		
+		if (queryBy.getValue().equals("ID")) {
+			if (isNumeric(queryField.getValue())) {
+				optionalMovie = controller.getMovieByMovieId(
+						Integer.parseInt(queryField.getValue()))
+						.getBody();
 			} else {
-				// name
-				movie = controller.getMovieByTitle(queryField.getValue()).getBody();
+				optionalMovie = Optional.ofNullable(null);
 			}
-	
+		} else {
+			// name
+			optionalMovie = controller.getMovieByTitle(queryField.getValue()).getBody();
+		}
+		
+		if (optionalMovie != null && optionalMovie.isPresent()) {
+
+			Movie movie = optionalMovie.get();
+			
 			String strTitle = movie.getTitle();
 			String strDescription = movie.getDescription();
 			LocalDate ldReleaseDate = movie.getReleaseDate();
@@ -417,7 +445,9 @@ public class MovieAppMainView extends VerticalLayout {
 				releaseDate.setValue(ldReleaseDate.toString());
 			}
 	
-			year.setText(intYear.toString());
+			if (intYear != null) {
+				year.setText(intYear.toString());
+			}
 	
 			// process genre "badges"
 			int genreCounter = 0;
@@ -506,10 +536,19 @@ public class MovieAppMainView extends VerticalLayout {
 					}
 				}
 			}
-
-		} catch (Exception ex) {
+		} else {
 			Notification.show("No movie found for those query parameters.",
 					5000, Position.TOP_CENTER);
 		}
+	}
+	
+	// https://www.baeldung.com/java-check-string-number
+	// numericPattern = Pattern.compile("-?\\d+(\\.\\d+)?");
+	private boolean isNumeric(String value) {
+		if (value == null) {
+			return false;
+		}
+		
+		return numericPattern.matcher(value).matches();
 	}
 }

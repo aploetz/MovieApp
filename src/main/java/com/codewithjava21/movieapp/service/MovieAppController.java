@@ -23,15 +23,19 @@ public class MovieAppController {
 	}
 
 	@GetMapping("/movie/id")
-	public ResponseEntity<Movie> getMovieByMovieId(@PathVariable(value="id") int movieId) {
+	public ResponseEntity<Optional<Movie>> getMovieByMovieId(@PathVariable(value="id") int movieId) {
 		
 		Optional<Movie> returnVal = movieRepo.findById(movieId);
 		
-		return ResponseEntity.ok(returnVal.get());
+		if (returnVal.isPresent()) {
+			return ResponseEntity.ok(returnVal);
+		}
+		
+		return ResponseEntity.ok(Optional.ofNullable(null));
 	}
 	
 	@GetMapping("/movie/title")
-	public ResponseEntity<Movie> getMovieByTitle(@PathVariable(value="title") String movieTitle) {
+	public ResponseEntity<Optional<Movie>> getMovieByTitle(@PathVariable(value="title") String movieTitle) {
 		Optional<Movie> returnVal = Optional.ofNullable(new Movie());
 		Optional<MovieByTitle> movieByTitle = movieTitleRepo.findById(movieTitle.toLowerCase());
 		
@@ -43,9 +47,11 @@ public class MovieAppController {
 		if (movieByTitle.isPresent()) {
 			int movieId = movieByTitle.get().getMovieId();
 			returnVal = movieRepo.findById(movieId);
+			
+			return ResponseEntity.ok(returnVal);
 		}
 		
-		return ResponseEntity.ok(returnVal.get());
+		return ResponseEntity.ok(Optional.ofNullable(null));
 	}
 	
 	@GetMapping("/recommendations/movie/id")
