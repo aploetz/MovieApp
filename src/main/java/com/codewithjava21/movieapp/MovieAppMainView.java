@@ -221,9 +221,8 @@ public class MovieAppMainView extends VerticalLayout {
 				// write to disk
 				File destination = new File(filename.toString());
 				Files.write(byteBuffer, destination);
-				inStream.close();
+				//inStream.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -272,6 +271,7 @@ public class MovieAppMainView extends VerticalLayout {
 				ex.printStackTrace();
 			}
 		}
+		
 		return noImgFileStream;
 	}
 	
